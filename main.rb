@@ -5,3 +5,4 @@ billing = BillingRule.new(1, BillingType::FIXED, 10.0, "09:00", "11:00")
 
 puts shift.inspect
 puts billing.inspect
+

@@ -1,6 +1,6 @@
 require 'date'
 
-class Time
+class MyTime
 
     attr_reader :hour, :minutes
     
@@ -11,7 +11,29 @@ class Time
         raise "Invalid time" if !(0..23).include?(@hour) || !(0..59).include?(@minutes)
     end
 
-end    
+    def to_minutes
+        return (@hour * 60) + @minutes
+    end
+
+    def compare(time)
+        if time.to_minutes < to_minutes
+            return -1 
+        elsif time.to_minutes > to_minutes
+            return +1 
+        else
+            return 0
+        end
+    end
+
+    def diff(time)
+        return to_minutes - time.to_minutes
+    end
+
+    def to_s
+        return format("%02d:%02d", @hour, @minutes)
+    end
+
+end
 
 class Duration
 
@@ -56,13 +78,20 @@ class BillingRule
         @id = id
         @type = type
         @payRate = payRate
-        @startTime = Time.new(startTime)
-        @endTime = Time.new(endTime)
+        @startTime = MyTime.new(startTime)
+        @endTime = MyTime.new(endTime)
     end
 
 end
 
 class BilledShift
+
+
+    def initialize(shifts, rules)
+        @shifts = shifts
+        @rules = rules
+        @portions = {}
+    end
 end
 
 class Portion
