@@ -88,10 +88,14 @@ class BilledShift
 
 
     def initialize(shifts, rules)
-        @shifts = shifts
+        calc(shifts, rules)
         @rules = rules
         @portions = {}
     end
+
+    def calc(shifts, rules)
+    end
+
 end
 
 class Portion
