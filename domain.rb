@@ -1,54 +1,4 @@
-require 'date'
-
-class MyTime
-
-    attr_reader :hour, :minutes
-    
-    def initialize(time)
-        time = time.split(":")
-        @hour = time[0].to_i
-        @minutes = time[1].to_i
-        raise "Invalid time" if !(0..23).include?(@hour) || !(0..59).include?(@minutes)
-    end
-
-    def to_minutes
-        return (@hour * 60) + @minutes
-    end
-
-    def compare(time)
-        if time.to_minutes < to_minutes
-            return -1 
-        elsif time.to_minutes > to_minutes
-            return +1 
-        else
-            return 0
-        end
-    end
-
-    def diff(time)
-        return to_minutes - time.to_minutes
-    end
-
-    def to_s
-        return format("%02d:%02d", @hour, @minutes)
-    end
-
-end
-
-class Duration
-
-    attr_reader :startDate, :endDate
-
-    def initialize(startDate, endDate)
-        @startDate = DateTime.parse(startDate)
-        @endDate = DateTime.parse(endDate)
-    end
-
-    def seconds
-        (@endDate - @startDate).numerator
-    end
-
-end
+require_relative 'time.lib'
 
 class WorkedShift < Duration
 
@@ -65,7 +15,7 @@ class WorkedShift < Duration
 
 end
 
-module BillingType
+module RuleType
     FIXED = "FIXED"
     DURATION = "DURATION"
 end
@@ -82,30 +32,72 @@ class BillingRule
         @endTime = MyTime.new(endTime)
     end
 
-end
-
-class BilledShift
-
-
-    def initialize(shifts, rules)
-        calc(shifts, rules)
-        @rules = rules
-        @portions = {}
+    def diff
+        return startTime.diff(endTime)
     end
 
-    def calc(shifts, rules)
+    def payRatePerSecond
+        return @payRate / (60.0 * 60.0)
     end
 
 end
 
-class Portion
+class Portion < WorkedShift
 
-    def initialize(id, startTime, endTime, session, pay)
-        @id = id
-        @startTime = startTime
-        @endTime = endTime
+    attr_reader :session, :pay
+
+    def initialize(shift, session, pay)
+        @id = shift.id
+        @startDate = shift.startDate
+        @endDate = shift.endDate
         @session = session
         @pay = pay
     end
 
 end
+
+class BilledShift < Portion
+
+    attr_reader :portions
+
+    def initialize(shift)
+        @id = shift.id
+        @startDate = shift.startDate
+        @endDate = shift.endDate
+        @session = 0
+        @pay = 0.0
+        @portions = []
+    end
+
+    def apply(rules)
+
+        session = 0
+        pay = 0.0
+
+        rules.each { |rule|
+
+            if rule.type == RuleType::FIXED
+
+                if rule.startTime < rule.endTime         
+                    seconds = rule.diff
+                else
+                    seconds = MyTime::FIRST.diff(rule.startTime) + rule.endTime.diff(MyTime::LAST)
+                end
+
+                portion = Portion.new(itself, seconds, seconds * rule.payRatePerSecond)
+
+                itself.portions << portion
+
+            else
+
+                puts "pendiente"
+
+            end
+
+
+        }
+
+    end
+
+end
+
